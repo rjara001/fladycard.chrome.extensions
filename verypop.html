@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <style>
+        table {
+            border: none;
+            width: 100%;
+            border-spacing: 0px;
+            border-collapse: collapse;
+            padding: 0px;
+        }
+
+        .button {
+            display: inline-block;
+            white-space: nowrap;
+            border: 1px solid rgb(119, 119, 119);
+            padding: 0px 1.5em;
+            margin: 0px;
+            font-weight: bold;
+            font-style: normal;
+            font-variant: normal;
+            font-stretch: normal;
+            font-size: small;
+            line-height: 2em;
+            font-family: Arial, Helvetica;
+            text-decoration: none;
+            color: rgb(51, 51, 51);
+            text-shadow: rgba(255, 255, 255, 0.8) 0px 1px 0px;
+            border-radius: 0.2em;
+            -webkit-box-shadow: rgba(255, 255, 255, 0.8) 0px 0px 1px 1px inset, rgba(0, 0, 0, 0.298039) 0px 1px 0px;
+            box-shadow: rgba(255, 255, 255, 0.8) 0px 0px 1px 1px inset, rgba(0, 0, 0, 0.298039) 0px 1px 0px;
+            letter-spacing: normal;
+            orphans: auto;
+            text-align: center;
+            text-indent: 0px;
+            text-transform: none;
+            widows: auto;
+            word-spacing: 0px;
+            -webkit-text-stroke-width: 0px;
+            background-image: -webkit-linear-gradient(top, rgb(238, 238, 238), rgb(204, 204, 204));
+            background-color: rgb(221, 221, 221);
+            cursor: pointer;
+        }
+    </style>
+
+
+    
+    <script type="text/javascript">
+        if (window.addEventListener)
+            addEventListener("message", receiver, false)
+        else
+            attachEvent("onmessage", receiver)
+        function receiver(e)
+        {
+            alert(localStorage.getItem("very_cookie"));
+
+            if (e.data.toString().indexOf('iniciar:')>=0)
+                _iniciarCarga(e.data.toString().replace('iniciar:', ""));
+                //if (e.data == 'iniciar:')
+                //{
+                //    e.source.postMessage('Hello', e.origin);
+                //} else
+                //{
+                //    alert(e.data);
+                //}
+            
+        }
+
+        function _iniciarCarga(mensaje)
+        {
+            var xmlhttp = new XMLHttpRequest();
+            //var url = "http://localhost:31224/Servicio/Palabra/traduccion.aspx?qs=hello"
+            var url = "http://localhost:31224/api/Traduccion/Traducir/" //+ getParameterByName("qs");
+            //var params =JSON.stringify({ '': mensaje });
+            var params = "Palabra=" + mensaje;
+
+          
+         //   xmlhttp.setRequestHeader("Connection", "close");
+
+            xmlhttp.onreadystatechange = function ()
+            {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+                {
+                    document.body.innerHTML = xmlhttp.responseText;
+                    ajustarPanel();
+                }
+            }
+            xmlhttp.open("POST", url, true);
+            xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            
+            xmlhttp.send(params);
+        }
+
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        function cerrar()
+        {
+            limpiar();
+
+            var win = window.parent.window;
+
+            win.postMessage("cerrar", getParameterByName("origin"));
+        }
+
+        function limpiar()
+        {
+            document.body.innerHTML = "";
+        }
+
+        function ajustarPanel()
+        {
+           
+            var altoSubPanel = document.getElementById("divSubPanel").clientHeight;
+            //alert(altoSubPanel);
+            if (altoSubPanel > 250)
+                altoSubPanel = 250;  
+
+                document.getElementById("divSubPanel").style.height = altoSubPanel + "px";
+
+                var win = window.parent.window;
+           
+                win.postMessage("ajustarPanel", getParameterByName("origin"));
+        }
+   
+    </script>
+   
+    
+    </head>
+    <body style="margin: 0; padding: 0">
+        <input type="hidden" id="hidTextoSeleccionado" />
+
+    </body>
+</html>
