@@ -36,6 +36,7 @@
     "content_scripts": [
         {
             "matches": [
+                "<all_urls>",
                 "http://*/*",
                 "https://*/*"
             ],
@@ -45,7 +46,8 @@
             ],
             "css": [
                 "bubble/estilo.css"
-            ]
+            ],
+            "all_frames": true
         }
     ],
     "sandbox": {

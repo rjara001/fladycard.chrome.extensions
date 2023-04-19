@@ -25,6 +25,8 @@ var _directorioBase = "chrome-extension://ID_CHROME/";
 
 var _very = { 'template': null, 'usuario': '', 'palabraSeleccionada': '', 'significado': '', 'significadoAnterior': '', 'palabraEsTexto': false, 'puedeAgregar': false, 'id_browser':'' };
 
+let root = null;
+
 _cargarTemplate();
 
 //*********** Constantes VeryMatch Box
@@ -37,25 +39,26 @@ var _style_vm_box = "height: 250px; width: 404px; background: white;";
 function _inicio()
 {
     _very.id_browser = chrome.runtime.id.trim();
-    _crearPopUp();
-    // _configurarBotones();
-    // _validarEntrada();
+     root = _crearPopUp();
+    _configurarBotones();
+    _validarEntrada();
+
 }
 function _validarEntrada()
 {
-    document.getElementById("VeryMatch_txtSignificado").onkeypress = function (e) {
+    root.querySelector("#VeryMatch_txtSignificado").onkeypress = function (e) {
         var chr = String.fromCharCode(e.which);
         if ("ABCDEFGHIJKLMNOPQRSTVWXYZabcdefghijklmnopqrstvwxyzáéíóúúü ".indexOf(chr) < 0)
             return false;
     };
 }
 
-function _desplegarElementosSignificado(idocument)
+function _desplegarElementosSignificado()
 {
-    var _lblSignificado = idocument.getElementById("VeryMatch_lblSignificado");
-    var _txtSignificado = idocument.getElementById("VeryMatch_txtSignificado");
-    var _lblTextoSignificado = idocument.getElementById("VeryMatch_lblTituloSignificado");
-    var _lblTextoPalabra = idocument.getElementById("VeryMatch_lblTituloPalabra");
+    var _lblSignificado = root.querySelector("#VeryMatch_lblSignificado");
+    var _txtSignificado = root.querySelector("#VeryMatch_txtSignificado");
+    var _lblTextoSignificado = root.querySelector("#VeryMatch_lblTituloSignificado");
+    var _lblTextoPalabra = root.querySelector("#VeryMatch_lblTituloPalabra");
 
     if (_very.usuario.length == 0)
     {
@@ -79,9 +82,11 @@ function _configurarBotones()
 {
     _configurarBotonAceptar();
 
-    var _aceptar = document.getElementById("VeryMatch_btnAceptar");
+    
 
-    var _cancelar = document.getElementById("VeryMatch_btnCerrar");
+    var _aceptar = root.querySelector('#VeryMatch_btnAceptar');
+
+    var _cancelar = root.querySelector("#VeryMatch_btnCerrar");
 
     _aceptar.addEventListener('click', function (e)
     {
@@ -104,7 +109,7 @@ function _activarAceptar()
 
 function _configurarBotonAceptar()
 {
-    var _aceptar = document.getElementById("VeryMatch_btnAceptar");
+    var _aceptar = root.querySelector("#VeryMatch_btnAceptar");
 
         if (_very.puedeAgregar)
             _aceptar.textContent = "Guardar";
@@ -125,8 +130,8 @@ function _AJAXPalabraAgregar()
 
     var url = _URL_VERYMATCH + "Guardar/";
 
-    var _lblNombre = document.getElementById("VeryMatch_lblPalabra");
-    var _txtSignificado = document.getElementById("VeryMatch_txtSignificado");
+    var _lblNombre = root.querySelector("#VeryMatch_lblPalabra");
+    var _txtSignificado = root.querySelector("#VeryMatch_txtSignificado");
 
     item.Nombre = _lblNombre.innerText
     item.Significado = _txtSignificado.value.substring(0, 50);
@@ -160,12 +165,17 @@ function _crearPopUp()
 {
     if (document.getElementById(_divVeryMatch_BOX) == null)
     {
-
+        const parentElement = document.createElement("div");
+        parentElement.id='verymatch_x';
+        const shadowRoot = parentElement.attachShadow({ mode: 'open' });
         var _div = _nuevoPanel();
         _div.style.visibility = 'hidden'
-        document.body.appendChild(_div);
-        //_ajustarAltoPopUp(_veryMatch_Alto);
         
+        shadowRoot.appendChild(_div);
+        
+        document.body.appendChild(parentElement);
+        //_ajustarAltoPopUp(_veryMatch_Alto);
+        return shadowRoot;
     }
 }
 
@@ -177,7 +187,7 @@ function _setRespuestaPlantilla(textoRespuesta)
     
     _inicio();
 
-    // _pintarUsuarioSesion(_very.usuario);
+    _pintarUsuarioSesion(_very.usuario);
 }
 
 function _cargarTemplate()
@@ -217,22 +227,15 @@ function _nuevoPanel()
 
 function _nuevoBody()
 {
-    var iframe = document.createElement('iframe');
-    iframe.id = 'icontainer';
-    iframe.src = chrome.runtime.getURL('container.html');
-
     var _div = document.createElement("div");
     _div.setAttribute("id", _divVeryMatch_INNER_BOX);
-
-    _div.appendChild(iframe);
-
-    // _div.innerHTML = `<iframe id='icontainer' src="chrome-extension://hcknigppdbpkncjcabgkkbicafknfecd/container.html" width="100%" height="500" frameborder="0"></iframe>`;
+    _div.innerHTML = _very.template;
     return _div;
 }
 
 function _activarMensaje(visible, mensaje)
 {
-    var _mensaje = document.getElementById(_divVeryMatch_Mensaje);
+    var _mensaje = root.querySelector(`#${_divVeryMatch_Mensaje}`);
     _mensaje.textContent = mensaje;
    
     if (visible)
@@ -254,6 +257,7 @@ function _nuevoHeader()
     _img.setAttribute("style", _style_img_cerrar);
 
     _div.setAttribute("style", _style_vm_header);
+    _div.id = "H1"
     _div.innerHTML = "Traductor ingles/español <b>VeryMatch</b>";
     _div.appendChild(_img);
 
@@ -268,9 +272,6 @@ function _nuevoHeader()
 // Se gatilla cuando alguien selecciona un texto a traducir.
 function _habilitarPopUp(e)
 {
-    var iframe = document.getElementById("icontainer");
-    var idocument = iframe.contentWindow.document;
-
     var posx = 0;
     var posy = 0;
 
@@ -278,20 +279,23 @@ function _habilitarPopUp(e)
     //  e = jQuery.event.fix(e);
 
     posx = e.pageX - 10;
-    posy = e.pageY - 40;
+    posyPin = e.pageY - 40;
+    posyPop = e.pageY + 20;
 
     var _div;
 
-    _desplegarElementosSignificado(idocument);
+    _desplegarElementosSignificado();
 
-    if (document.getElementById(_divVeryMatch_IMAGEN) == null)
+    const _divPanel = document.getElementById("verymatch_x");
+    _divPanel.setAttribute("style", 'z-index:9999;position:absolute; left: ' + posx + 'px; top: ' + posyPop + 'px;');
+
+    if (document.getElementById(`${_divVeryMatch_IMAGEN}`) == null)
     {
         _div = document.createElement("div");
         
         _div.setAttribute("id", _divVeryMatch_IMAGEN);
 
-        _div.setAttribute("style", 'z-index:9999;position:absolute; left: ' + posx + 'px; top: ' + posy + 'px; width:24px; height:24px;background: url(' + _directorioBase.replace("ID_CHROME", _very.id_browser) + 'img/verymatch-icon.png);');
-
+ 
         document.body.appendChild(_div);
         _div.addEventListener('click', function ()
         {
@@ -300,12 +304,13 @@ function _habilitarPopUp(e)
     }
     else
     {
-        _div = document.getElementById(_divVeryMatch_IMAGEN);
+        _div = document.getElementById(`${_divVeryMatch_IMAGEN}`);
         _div.style.visibility = 'visible';
         
         _div.style.left = posx + 'px';
         _div.style.top = posy + 'px';
     }
+    _div.setAttribute("style", 'z-index:9999;position:absolute; left: ' + posx + 'px; top: ' + posyPin + 'px; width:24px; height:24px;background: url(' + _directorioBase.replace("ID_CHROME", _very.id_browser) + 'img/verymatch-icon.png);');
 
     _imagenAbierta = true;
 
@@ -316,15 +321,14 @@ function _habilitarPopUp(e)
 function mover()
 {
 
-  
-    _crearPopUp();
+    // _crearPopUp();
 
     _actualizarPopUp();
 }
 
 function _actualizarPopUp()
 {
-    //_innerPopUp = document.getElementById(_divVeryMatch_INNER_BOX);
+    //_innerPopUp = root.querySelector(`#${_divVeryMatch_INNER_BOX);
 
     //_innerPopUp.innerHTML = _very.template;
 
@@ -367,7 +371,7 @@ function _setRespuestaSignificado(textoRespuesta)
 }
 function _pintarUsuarioSesion(sesion)
 {
-    var linkSesion = document.getElementById("VeryMatch_lnkUsuario");
+    var linkSesion = root.querySelector("#VeryMatch_lnkUsuario");
     
     if (sesion.length > 0)
     {
@@ -385,15 +389,14 @@ function _pintarUsuarioSesion(sesion)
 function _ajustarAltoPopUp()
 {
     var _img = document.getElementById(_divVeryMatch_IMAGEN);
-    var _popUp = document.getElementById(_divVeryMatch_BOX);
+    var _popUp = root.querySelector(`#${_divVeryMatch_BOX}`);
 
     // _popUp.style.top = (eval(_img.style.top.replace("px", "")) - 10) + 'px';
     // _popUp.style.left = (eval(_img.style.left.replace("px", "")) - 8) + 'px';
 
-
     _img.style.zIndex = 99999;
 
-    _innerSubPanel = document.getElementById("VeryMatch_divSubPanel");
+    _innerSubPanel = root.querySelector("#VeryMatch_divSubPanel");
 
     var altoSubPanel = _innerSubPanel.scrollHeight;
     if (_very.palabraEsTexto)
@@ -414,7 +417,7 @@ function _ajustarAltoPopUp()
     }
         
 
-    _innerPopUp = document.getElementById("VeryMatch_Plantilla");
+    _innerPopUp = root.querySelector("#VeryMatch_Plantilla");
       
     _popUp.style.height = (_innerPopUp.clientHeight + _altoDiferenciaBox) + 'px';
 
@@ -423,8 +426,8 @@ function _ajustarAltoPopUp()
 
 function _pintarTextoSignificado(significado)
 {
-    var _lblTraduccion = document.getElementById("VeryMatch_lblTraduccion");
-    var _tblPanel = document.getElementById("VeryMatch_tblPanel");
+    var _lblTraduccion = root.querySelector("#VeryMatch_lblTraduccion");
+    var _tblPanel = root.querySelector("#VeryMatch_tblPanel");
     _tblPanel.style.display = "none";
     _lblTraduccion.style.display = 'inline';
     _lblTraduccion.textContent = significado;
@@ -432,14 +435,14 @@ function _pintarTextoSignificado(significado)
 
 function _pintarVocabularioSignificado(significado)
 {
-    var _lblTraduccion = document.getElementById("VeryMatch_lblTraduccion");
-    var _tblPanel = document.getElementById("VeryMatch_tblPanel");
+    var _lblTraduccion = root.querySelector("#VeryMatch_lblTraduccion");
+    var _tblPanel = root.querySelector("#VeryMatch_tblPanel");
     _tblPanel.style.display = 'inline';
     _lblTraduccion.style.display = "none";
 
-    var _lblPalabra = document.getElementById("VeryMatch_lblPalabra");
-    var _lblSignificado = document.getElementById("VeryMatch_lblSignificado");
-    var _txtSignificado = document.getElementById("VeryMatch_txtSignificado");
+    var _lblPalabra = root.querySelector("#VeryMatch_lblPalabra");
+    var _lblSignificado = root.querySelector("#VeryMatch_lblSignificado");
+    var _txtSignificado = root.querySelector("#VeryMatch_txtSignificado");
 
     _lblPalabra.textContent = _very.palabraSeleccionada;
     _lblSignificado.textContent = significado;
@@ -493,8 +496,8 @@ function _puedeMostrarImagen(valor)
 
 function cerrar()
 {
-    var _pop = document.getElementById(_divVeryMatch_BOX);
-    var _imagen = document.getElementById(_divVeryMatch_IMAGEN);
+    var _pop = root.querySelector(`#${_divVeryMatch_BOX}`);
+    var _imagen = document.getElementById(`${_divVeryMatch_IMAGEN}`);
 
     if (_pop!=null)
         _pop.style.visibility = 'hidden';
@@ -509,10 +512,10 @@ function cerrar()
 
 function _limpiarTextos()
 {
-    var _lblTraduccion = document.getElementById("VeryMatch_lblTraduccion");
-    var _lblPalabra = document.getElementById("VeryMatch_lblPalabra");
-    var _lblSignificado = document.getElementById("VeryMatch_lblSignificado");
-    var _txtSignificado = document.getElementById("VeryMatch_txtSignificado");
+    var _lblTraduccion = root.querySelector("#VeryMatch_lblTraduccion");
+    var _lblPalabra = root.querySelector("#VeryMatch_lblPalabra");
+    var _lblSignificado = root.querySelector("#VeryMatch_lblSignificado");
+    var _txtSignificado = root.querySelector("#VeryMatch_txtSignificado");
 
     _lblTraduccion.textContent = '';
     _lblPalabra.textContent = '';
