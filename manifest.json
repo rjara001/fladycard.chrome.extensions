@@ -15,7 +15,14 @@
         "96": "icon_96.png",
         "128": "icon_128.png"
     },
+    "oauth2": {
+        "client_id": "967034721711-20e7u0gm5bqr2ic1intjer5agfs35a5n.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/userinfo.email"
+        ]
+    },
     "permissions": [
+        "identity",
         "unlimited_storage",
         "notifications",
         "contextMenus",
@@ -30,7 +37,9 @@
                 "bubble/very.js",
                 "container.html"
             ],
-            "matches": ["<all_urls>"]
+            "matches": [
+                "<all_urls>"
+            ]
         }
     ],
     "content_scripts": [

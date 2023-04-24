@@ -10,10 +10,10 @@ var _divVeryMatch_Mensaje = "VeryMatch_divMensaje";
 var _altoVMBoxSoloPalabra = 87;
 var _altoDiferenciaBox = 50;
 
-//var _URL_HOST = "http://localhost:31222/";
-var _URL_HOST = "http://localhost:3000/";
+var _URL_HOST = "https://us-central1-fladycard.cloudfunctions.net/api/";
+//var _URL_HOST = "http://localhost:3000/";
 
-var _URL_VERYMATCH = _URL_HOST + "template/";
+var _URL_VERYMATCH_SAVE = _URL_HOST + "word/";
 var _URL_LOGIN_VERYMATCH = _URL_HOST + "";
 //var _URL_TRADUCCION_VERYMATCH = _URL_HOST + "Servicio/Palabra/traduccion.aspx?qs=";
 var _URL_TRADUCCION_VERYMATCH = "chrome-extension://id_chrome/verypop.html?qs=";
@@ -23,7 +23,16 @@ var _imagenAbierta = false;
 //var _directorioBase = "chrome-extension://ID_CHROME";
 var _directorioBase = "chrome-extension://ID_CHROME/";
 
-var _very = { 'template': null, 'usuario': '', 'palabraSeleccionada': '', 'significado': '', 'significadoAnterior': '', 'palabraEsTexto': false, 'puedeAgregar': false, 'id_browser':'' };
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    if (request.type === 'TOKEN') {
+      const token = request.token;
+
+      _very.usuario = token;
+      // Use the token to make API requests
+    }
+  });
+
+var _very = { 'template': null, 'usuario': '', 'palabraSeleccionada': '', 'significado': '', 'palabraEsTexto': false, 'id_browser':'' };
 
 let root = null;
 
@@ -101,20 +110,20 @@ function _configurarBotones()
 
 function _activarAceptar()
 {
-    if (_very.puedeAgregar)
+    // if (_very.puedeAgregar)
         _AJAXPalabraAgregar();
-    else
-        cerrar();
+    // else
+    //     cerrar();
 }
 
 function _configurarBotonAceptar()
 {
     var _aceptar = root.querySelector("#VeryMatch_btnAceptar");
 
-        if (_very.puedeAgregar)
-            _aceptar.textContent = "Guardar";
-        else
-            _aceptar.textContent = "Aceptar";
+        // if (_very.puedeAgregar)
+            _aceptar.textContent = "Save";
+        // else
+        //     _aceptar.textContent = "Aceptar";
 }
 
 function _maxCorte(largo)
@@ -128,13 +137,13 @@ function _AJAXPalabraAgregar()
 
     var xmlhttp = new XMLHttpRequest();
 
-    var url = _URL_VERYMATCH + "Guardar/";
+    var url = _URL_VERYMATCH_SAVE + _very.usuario;
 
     var _lblNombre = root.querySelector("#VeryMatch_lblPalabra");
     var _txtSignificado = root.querySelector("#VeryMatch_txtSignificado");
 
-    item.Nombre = _lblNombre.innerText
-    item.Significado = _txtSignificado.value.substring(0, 50);
+    item.Name = _lblNombre.innerText
+    item.Value = _txtSignificado.value.substring(0, 150);
 
     xmlhttp.onreadystatechange = function ()
     {
@@ -155,9 +164,9 @@ function _setRespuestaAgregar(estado)
         case 1:_activarMensaje(true, "Mmmh.., así no funciona, debes seleccionar 3 palabras como máximo."); break;
         case 200: _activarMensaje(true, "La palabra '" + _ponerPuntosSuspensivos(_very.palabraSeleccionada,30) + "' se actualizado correctamente."); break;
         case 201: _activarMensaje(true, "La palabra '" + _ponerPuntosSuspensivos(_very.palabraSeleccionada,30) + "' se agregó correctamente."); break;
-        default: _activarMensaje(true, "Uff!.., ocurrio algo no esperado, no se que decir.. a si, favor intentelo más tarde.");
+        default: _activarMensaje(true, "Oops, something went wrong. Our team has been notified and we're working to fix the issue. Thank you for your patience.");
     }
-    _very.puedeAgregar = false;
+    // _very.puedeAgregar = false;
     _configurarBotonAceptar();
 }
 
@@ -258,7 +267,7 @@ function _nuevoHeader()
 
     _div.setAttribute("style", _style_vm_header);
     _div.id = "H1"
-    _div.innerHTML = "Traductor ingles/español <b>VeryMatch</b>";
+    _div.innerHTML = "Plug-in <b>FladyCard</b> adding new word your bag";
     _div.appendChild(_img);
 
     _img.addEventListener('click', function ()
@@ -332,9 +341,8 @@ function _actualizarPopUp()
 
     //_innerPopUp.innerHTML = _very.template;
 
-    // _buscarAJAXSignificado();
+    _buscarAJAXSignificado();
 
-     
     _activarMensaje(true, "Buscando '" + _ponerPuntosSuspensivos(_very.palabraSeleccionada, 30) + "'..");
  
 }
@@ -343,20 +351,20 @@ function _setRespuestaSignificado(textoRespuesta)
 {
     obj = JSON.parse(textoRespuesta)
 
-    _very.usuario = obj[0].Value;
-    _very.palabraEsTexto = (obj[1].Value=="True"?true:false);
-    _very.significado = obj[2].Value;
-    _very.puedeAgregar = _very.usuario.length > 0 && !_very.palabraEsTexto;
-    _very.significadoAnterior = obj[3].Value;
+    _very.usuario = obj.userid;
+    // _very.palabraEsTexto = (obj[1].Value=="True"?true:false);
+    _very.significado = obj.significado;
+    // _very.puedeAgregar = _very.usuario.length > 0 && !_very.palabraEsTexto;
+    // _very.significadoAnterior = obj[3].Value;
 
     _pintarUsuarioSesion(_very.usuario);
 
     _activarMensaje(false, "");
 
-    if (_very.palabraEsTexto)
-        _pintarTextoSignificado(_very.significado);
-    else
-        _pintarVocabularioSignificado(_very.significado);
+    //if (_very.palabraEsTexto)
+        // _pintarTextoSignificado(_very.significado);
+    // else
+         _pintarVocabularioSignificado(_very.significado);
 
    
 
@@ -448,8 +456,8 @@ function _pintarVocabularioSignificado(significado)
     _lblSignificado.textContent = significado;
     _txtSignificado.value = significado;
 
-    if (_very.significadoAnterior.length > 0)
-        _activarMensaje(true, "valor existente:'" + _ponerPuntosSuspensivos(_very.significadoAnterior, 30) + "'");
+    // if (_very.significadoAnterior.length > 0)
+    //     _activarMensaje(true, "valor existente:'" + _ponerPuntosSuspensivos(_very.significadoAnterior, 30) + "'");
 }
 
 function _ponerPuntosSuspensivos(valor, largo)
@@ -469,8 +477,8 @@ function _buscarAJAXSignificado()
 {
     var xmlhttp = new XMLHttpRequest();
 
-    var url = _URL_HOST + "api/Traduccion/Traducir/";
-    var params = "Palabra=" + _very.palabraSeleccionada;
+    var url = _URL_HOST + "translate";
+    var params = `IdUser=${_very.usuario}&Text=${_very.palabraSeleccionada}&codeLanguage=es`;
 
     xmlhttp.onreadystatechange = function ()
     {
